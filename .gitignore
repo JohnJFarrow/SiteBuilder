@@ -1,0 +1,7 @@
+.temp/
+.cache/
+.vs/
+obj
+bin
+
+
