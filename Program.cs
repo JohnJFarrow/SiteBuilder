@@ -335,14 +335,14 @@ namespace SiteBuilder
                         // main 
                         .Add(new Main("home").Add("aria-labelledby", "main-title")
 
-                                .Add(new Header("hero")
-                                        .Add(new Span("main-header-part1")
-                                                .AddText("UnrealCode:")
-                                            )
-                                )
+                                //.Add(new Header("hero")
+                                //        .Add(new Span("main-header-part1")
+                                //                .AddText("UnrealCode:")
+                                //            )
+                                //)
 
                                 .Add(new Header("hero")
-                                        .Add(new Span("main-header-part2")
+                                        .Add(new Div("main-header-part1")
                                                 .AddText("Experiments with Unreal Engine")
                                             )
                                     )
