@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "SiteBuilder": {
+      "commandName": "Project",
+      "commandLineArgs": "--watch",
+      "workingDirectory": "D:\\work\\github.io"
+    }
+  }
+}
