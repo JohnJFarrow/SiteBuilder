@@ -41,7 +41,8 @@ namespace WindowsSpecific
         /// <returns>WindowInformationList</returns>
         public static List<WindowInformation> GetAllWindowsExtendedInfo()
         {
-            return winInfoExtendedInfoProcess(GetAllWindowsTree());
+            WindowInformation desktopWindow = GetAllWindowsTree();
+            return winInfoExtendedInfoProcess(desktopWindow);
         }
 
         /// <summary>
@@ -149,9 +150,22 @@ namespace WindowsSpecific
         /// <param name="lParam">IntPtr.Zero</param>
         /// <returns></returns>
         [DllImport("User32.dll")]
-        private static extern int SendMessage(IntPtr hwnd, WMConstants wmConstant, IntPtr wParam, IntPtr lParam);
+        private static extern int SendMessage(
+            IntPtr hwnd, 
+            WMConstants wmConstant, 
+            IntPtr wParam, IntPtr 
+            lParam);
 
-        
+        [DllImport("User32.dll")]
+        private static extern int SendMessageTimeout(
+             IntPtr hWnd,
+             WMConstants wmConstant,
+             IntPtr wParam,
+             StringBuilder lParam,  
+             uint fuFlags,
+             uint uTimeout,
+             IntPtr lpdwResult);
+
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
 
         private enum GetWindow_Cmd : uint
@@ -274,9 +288,33 @@ namespace WindowsSpecific
             }
             else
             {
-                caption = new StringBuilder(Convert.ToInt32(SendMessage(wi.Handle, WMConstants.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero)) + 1);
-                SendMessage(wi.Handle, WMConstants.WM_GETTEXT, caption.Capacity, caption);
-                wi.Caption = caption.ToString();
+                // int Value = SendMessage(wi.Handle, WMConstants.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+                // should not be needed for next call
+                caption = new StringBuilder(Convert.ToInt32(256) + 1);
+
+                int Value = SendMessageTimeout( wi.Handle, // IntPtr hWnd 
+                    WMConstants.WM_GETTEXTLENGTH,  // uint uMsg
+                    IntPtr.Zero, // uint wParam
+                    caption, // StringBuilder lParam
+                    0, // uint fuFlags,
+                    2, // uint uTimeout MS
+                    IntPtr.Zero // IntPtr lpdwResult
+                );
+
+                if (Value == 0)
+                {
+                    // timeout. somewhere there is a window which is not responding 
+                    // to messages 
+                    // Console.WriteLine("timeout on window {0}" , wi.Handle );
+
+                }
+                else
+                {
+                    caption = new StringBuilder(Convert.ToInt32(Value) + 1);
+                    SendMessage(wi.Handle, WMConstants.WM_GETTEXT, caption.Capacity, caption);
+                    wi.Caption = caption.ToString();
+                }
             }
             return wi;
         }
@@ -446,7 +484,10 @@ namespace SiteBuilder
 
         public static void Refresh()
         {
+            // hangs if there are two firefox windows open
+            Console.WriteLine("calling GetAllWindowsExtendedInfo");
             List<WindowsSpecific.WindowInformation> Windows = WindowsSpecific.WindowList.GetAllWindowsExtendedInfo();
+            Console.WriteLine("done calling GetAllWindowsExtendedInfo");
 
             List<WindowsSpecific.WindowInformation> UnrealCodeWindows = new List<WindowsSpecific.WindowInformation>();
 

@@ -596,7 +596,7 @@ namespace SiteBuilder
             foreach (Indexable Ix in indexables)
             {
                 // might be index=false Draft=true
-                if (Ix.metadata.Index)
+                if ( Ix.metadata != null && Ix.metadata.Index)
                 {
                     element.Add(new Div()
                                     .Add(new H2()
