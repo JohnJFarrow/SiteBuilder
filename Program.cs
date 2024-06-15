@@ -237,7 +237,7 @@ namespace SiteBuilder
 
         private void HeadAddHighlightJS(List<string> head)
         {
-            head.Add("<link rel = \"stylesheet\" href=\"./css/highlight/styles/default.css\">");
+            head.Add("<link rel = \"stylesheet\" href=\"./css/highlight/styles/unrealcode.css\">");
             head.Add("<link rel = \"stylesheet\" href=\"./css/hljs_overrides.css\">");
             head.Add("<script src = \"./css/highlight/highlight.min.js\" ></script>");
             head.Add("<script> hljs.highlightAll();</script>");
