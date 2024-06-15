@@ -1,9 +1,9 @@
 ﻿using Markdig;
 using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
-using Markdown.ColorCode;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using static System.Windows.Forms.LinkLabel;
 
 
 void Usage()
@@ -70,9 +70,6 @@ namespace SiteBuilder
                 .UseYamlFrontMatter()
                 .UseGridTables()
                 .UsePipeTables()
-                .UseColorCode(
-                    HtmlFormatterType.Css
-                )
                 .EnableTrackTrivia()
                 .UseDiagrams()
                 .Use<YamlExpanderExtension>()
@@ -238,6 +235,14 @@ namespace SiteBuilder
             head.Add("</script>");
         }
 
+        private void HeadAddHighlightJS(List<string> head)
+        {
+            head.Add("<link rel = \"stylesheet\" href=\"./css/highlight/styles/default.css\">");
+            head.Add("<link rel = \"stylesheet\" href=\"./css/hljs_overrides.css\">");
+            head.Add("<script src = \"./css/highlight/highlight.min.js\" ></script>");
+            head.Add("<script> hljs.highlightAll();</script>");
+        }
+
         private List<string> GetIndexHead()
         {
             var head = new List<string>();
@@ -245,6 +250,7 @@ namespace SiteBuilder
             HeadAddMeta(head);
             HeadAddStylesheets(head);
             HeadAddMermaid(head);
+            HeadAddHighlightJS(head);
 
             head.Add("<title>unrealcode.net</title>");
             head.Add("<meta name=\"description\" content=\"\">");
@@ -261,6 +267,8 @@ namespace SiteBuilder
             HeadAddMeta(head);
             HeadAddStylesheets(head);
             HeadAddMermaid(head);
+            HeadAddHighlightJS(head);
+
 
             head.Add("<title>" + Meta.Title + " | unrealcode.net</title>");
             head.Add("<meta name=\"description\" content=\"" + Meta.Title + "\">");
