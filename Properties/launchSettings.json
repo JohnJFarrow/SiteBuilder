@@ -2,7 +2,7 @@
   "profiles": {
     "SiteBuilder": {
       "commandName": "Project",
-      "commandLineArgs": "--watch",
+      "commandLineArgs": "--all\r\n",
       "workingDirectory": "D:\\work\\github.io"
     }
   }

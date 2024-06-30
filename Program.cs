@@ -1,6 +1,8 @@
 ﻿using Markdig;
+using Markdig.Extensions.Tables;
 using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
+using System.Diagnostics;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using static System.Windows.Forms.LinkLabel;
@@ -62,6 +64,8 @@ namespace SiteBuilder
         string CONTENT_DIR = @"./content";
         string CONTENT_PATTERN = @"*.md";
         bool bAddSidebarLevelNumbers = false;
+
+        string[] ValidTags = new string[] { "c++", "python", "physics", "tools", "optimization" };
 
         private MarkdownPipeline GetPipeline()
         {
@@ -243,6 +247,9 @@ namespace SiteBuilder
             head.Add("<script> hljs.highlightAll();</script>");
         }
 
+
+
+
         private List<string> GetIndexHead()
         {
             var head = new List<string>();
@@ -260,7 +267,7 @@ namespace SiteBuilder
 
         private List<string> GetPageHead(Metadata? Meta)
         {
-            System.Diagnostics.Debug.Assert(Meta != null);
+            Debug.Assert(Meta != null);
 
             var head = new List<string>();
 
@@ -278,81 +285,75 @@ namespace SiteBuilder
 
         private Element GetHeaderNavbar()
         {
-            return new Header("navbar")
-                .Add(new Div("sidebar-button"))
-                .Add(new A()
+            Element header = new Header("navbar")
+                .Add(new A("header-link")
                         .Href("index.html")
-                        .Add("aria-current", "page")
-                        .Class("home-link router-link-exact-active router-link-active")
                         .Add(new Span()
-                                .AddText("unrealcode.net")
+                                .AddText("UNREALCODE.net")
                                 .Class("site-name")
                             )
                 )
-                .Add(new Div("links")
-                    .Add(new Nav("nav-links can-hide")
-                            .Add(new Div("nav-item")
-                                .Add(new A()
-                                    .Href("index.html")
-                                    .Add("aria-current", "page")
-                                    .Class("nav-link router-link-exact-active router-link-active")
-                                    .AddText("Home")
-                                    )
-                                )
+                .Add(new A("header-link")
+                        .Href("index.html")
+                        .Add(new Span()
+                                .AddText("Articles")
                             )
-                );
-        }
+                )
+                ;
 
-        private Element GetSidebarMask()
-        {
-            return new Div().Class("sidebar-mask");
-        }
+            foreach (string Tag in ValidTags)
+            {
+                string FileName = FileNameForTag(Tag).Replace(@"output\", string.Empty );
+                header.Add(new A("header-link")
+                        .Href(FileName)
+                        .Add(new Span()
+                            .AddText(Tag)
+                            ));
 
+            }
+
+            return header;
+        }
 
         private Element GetTopNavLinks()
         {
             return new Nav("nav-item")
                 .Add(new A()
                     .Href("/")
-                    .Add("aria-current", "page")
                     .Class("nav-link router-link-exact-active router-link-active")
                     .AddText("Home")
                     );
         }
 
-        private List<string> GetIndexBody(List<Indexable> indexables)
+        private List<string> GetIndexBody(List<Indexable> indexables, string MatchTag )
         {
             List<string> text = new List<string>();
+
+            string PageHeading = "Articles About Unreal Engine";
+
+            if (MatchTag != "")
+            {
+                PageHeading += " [" + MatchTag + "]";
+            }
 
             text = new Div()
                 .Addprop("id", "app")
                 .Addprop("data-server-rendered", "true")
                 .Add(new Div("theme-container no-sidebar")
                       .Add(GetHeaderNavbar())
-                      .Add(GetSidebarMask())
 
-                        // aside
-                        .Add(new Aside().Class("sidebar")
-                            .Add(GetTopNavLinks())
-                        )
                         // main 
-                        .Add(new Main("home").Add("aria-labelledby", "main-title")
-
-                                //.Add(new Header("hero")
-                                //        .Add(new Span("main-header-part1")
-                                //                .AddText("UnrealCode:")
-                                //            )
-                                //)
+                        .Add(new Main("home")
 
                                 .Add(new Header("hero")
-                                        .Add(new Div("main-header-part1")
-                                                .AddText("Experiments with Unreal Engine")
-                                            )
+                                        .Add(new H1().Class("main-header-part1")
+                                            .AddText( PageHeading )
+                                         )
                                     )
 
                                 .Add(new Div("theme-default-content custom content__default")
 
-                                        .Add(DivsForIndexables(indexables))
+                                        .Add(DivsForIndexables(indexables, MatchTag))
                                     )
                             )
 
@@ -440,6 +441,9 @@ namespace SiteBuilder
                 {
                     if (item == null) continue;
 
+                    // just have subheadings
+                    if (item.Level == 1) continue;
+
                     if (CurrentHeader == null)
                     {
                         CurrentHeader = new TOCHeading();
@@ -520,14 +524,7 @@ namespace SiteBuilder
                 // one link for each ## header of some level
                 .Add(new UL("sidebar-links")
                         .Add(new LI()
-                                .Add(new Section("sidebar-group depth-0")
-                                        .Add(new P("sidebar-heading open")
-                                            .Add(new Span()
-                                                    .AddText(Ix!.metadata!.Title)
-                                                    )
-                                            )
-                                            .Add(ListForHeaders(Ix))
-                                        )
+                                .Add(ListForHeaders(Ix))
                                 )
                         );
 
@@ -538,32 +535,17 @@ namespace SiteBuilder
         {
             Element div = new Main().Class("page");
 
-            Element div2 = new Div("theme-default-content content__default");
-
-            div.Add(div2);
+            div.Add(GetHeaderNavbar());
 
             var Pipe = GetPipeline();
 
             TextWriter TW = new StringWriter();
             var renderer = new Markdig.Renderers.HtmlRenderer(TW);
 
-            bool OneHit = true;
-
-            if (OneHit)
+            if (Ix.filecontent != null)
             {
-                if (Ix.filecontent != null)
-                {
-                    var outer = Markdig.Markdown.Convert(Ix.filecontent, renderer, Pipe);
-                    div2.AddText(outer.ToString());
-                }
-            }
-            else
-            {
-                //foreach( var item in Ix.markdown )
-                {
-                    //var outer = Markdown.Convert( item, renderer, Pipe);
-                    //div.AddText(outer.ToString());
-                }
+                var outer = Markdig.Markdown.Convert(Ix.filecontent, renderer, Pipe);
+                div.AddText(outer.ToString());
             }
 
             div.Add(PageFooter());
@@ -581,14 +563,13 @@ namespace SiteBuilder
 
                 text = new Div()
                     .Addprop("id", "app")
-                    .Addprop("data-server-rendered", "true")
-                    .Add(new Div("theme-container"))
-                          .Add(GetHeaderNavbar())
-                          .Add(GetSidebarMask())
+                    .Add(new Div("theme-container")
+                          //.Add(GetHeaderNavbar())
 
-                          .Add(CreateSidebar(Ix))
-
-                          .Add(CreateMainContent(Ix))
+                          .Add( new Div("main-container" )
+                              .Add(CreateSidebar(Ix))
+                              .Add(CreateMainContent(Ix)))
+                          )
 
 
 
@@ -598,30 +579,97 @@ namespace SiteBuilder
 
             return text;
         }
-        private Element DivsForIndexables(List<Indexable> indexables)
+
+        private Element MakeRow(Indexable?[] Set )
+        {
+            Element row = new Row("index-row");
+
+            for (int i = 0; i < 3; i++)
+            {
+                Indexable? Ix = Set[i];
+                if (Ix == null) continue;
+
+                // last row does not have 3 elements
+                Element cell = new Cell("index-cell");
+
+                cell.Add(
+                    new Section("article")
+                        .Add(new H2()
+                                .Add(new A()
+                                          .Href(Ix.GetOutFileName())
+                                          .AddText(Ix!.metadata!.Title)
+                                     )
+                            )
+                        .Add(new P().AddText(Ix.metadata.Description))
+                        .Add(new A().Href(Ix.GetOutFileName())
+                                    .AddText("Read more")
+                            )
+                    );
+
+                row.Add(cell);
+            }
+            return row; 
+        }
+
+        private Element DivsForIndexables(List<Indexable> indexables, String MatchTag)
         {
             Element element = new Div();
+
+            // make 3 columns
+            Indexable?[] Set = new Indexable[3];
+
+            int SetIndex = 0;
+
+            Element table = new Table("index-table");
+
             foreach (Indexable Ix in indexables)
             {
+                if( Ix.metadata == null ) continue;
                 // might be index=false Draft=true
-                if ( Ix.metadata != null && Ix.metadata.Index)
+                if (!Ix.metadata.Index) continue;
+
+                if (MatchTag != "" && Ix.metadata.Tags == null ) continue;
+                if (MatchTag != "" && !Ix.metadata.Tags!.Contains(MatchTag)) continue;
+
+                if( SetIndex < 3)
                 {
-                    element.Add(new Div()
-                                    .Add(new H2()
-                                            .Add(new A()
-                                                      .Href(Ix.GetOutFileName())
-                                                      .AddText(Ix!.metadata!.Title)
-                                                 )
-                                        )
-                                    .Add(new P().AddText(Ix.metadata.Description))
-                                    .Add(new A().Href(Ix.GetOutFileName())
-                                                .AddText("Read more")
-                                        )
-                                );
+                    Set[SetIndex++] = Ix;
+                }
+
+                if( SetIndex >= 3) {
+                    Element row = MakeRow(Set);
+                    table.Add(row);
+                    for(int i = 0; i < 3; i++)
+                    {
+                        Set[i] = null;
+                    }
+                    SetIndex = 0;
                 }
             }
 
+            if( SetIndex > 0 )
+            {
+                Element row = MakeRow(Set);
+                table.Add(row);
+            }
+
+            element.Add(table); 
             return element;
+        }
+
+        private string FileNameForTag( string Tag )
+        {
+            string FileName = @"output\index_";
+            if (Tag == "c++")
+            {
+                FileName += "cpp";
+            }
+            else
+            {
+                FileName += Tag;
+            }
+            FileName += ".html";
+            return FileName;
         }
 
         public void RecreateIndex(List<Indexable>? indexables = null )
@@ -634,7 +682,13 @@ namespace SiteBuilder
 
             Write(@"output\index.html",
                 GetIndexHead(),
-                GetIndexBody(indexables));
+                GetIndexBody(indexables, ""));
+
+            foreach( string Tag in ValidTags )
+            {
+                string FileName = FileNameForTag(Tag);
+                Write( FileName, GetIndexHead(), GetIndexBody(indexables, Tag));
+            }
         }
 
         private Element PageFooter()
@@ -689,6 +743,7 @@ namespace SiteBuilder
             if( ChosenIx != null )
             {
                 Console.WriteLine("updating {0} to {1}", ChosenIx.filename, ChosenIx.GetOutFileName(true).Replace(@"/", @"\"));
+
                 Write(ChosenIx!.GetOutFileName(true), GetPageHead(ChosenIx!.metadata), GetPageBody(ChosenIx));
 
                 RecreateIndex(indexables);

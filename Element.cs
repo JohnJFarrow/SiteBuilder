@@ -111,7 +111,6 @@ namespace SiteBuilder
         {
             Addprop("class", Class);
         }
-
     }
 
     public class Header : Element
@@ -216,6 +215,41 @@ namespace SiteBuilder
         }
     }
 
+    public class Table : Element
+    {
+        public Table() : base("table")
+        {
+        }
+
+        public Table(string Class) : base("table")
+        {
+            Addprop("class", Class);
+        }
+    }
+
+    public class Row : Element
+    {
+        public Row() : base("tr")
+        {
+        }
+
+        public Row(string Class) : base("tr")
+        {
+            Addprop("class", Class);
+        }
+    }
+
+    public class Cell : Element
+    {
+        public Cell() : base("td")
+        {
+        }
+
+        public Cell(string Class) : base("td")
+        {
+            Addprop("class", Class);
+        }
+    }
 
     public class P : Element
     {
@@ -233,6 +267,10 @@ namespace SiteBuilder
     public class H1 : Element
     {
         public H1() : base("h1")
+        {
+        }
+
+        public H1(string Klass ) : base("h1")
         {
         }
     }
